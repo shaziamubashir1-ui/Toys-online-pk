@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Block Dodge Game</title>
+  <style>
+    body {
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: #222;
+      color: white;
+      font-family: Arial, sans-serif;
+      height: 100vh;
+      justify-content: center;
+    }
+    canvas {
+      background: #333;
+      border: 2px solid #fff;
+      display: block;
+    }
+    .controls {
+      margin-top: 10px;
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+    }
+    button {
+      background: #555;
+      color: white;
+      border: none;
+      padding: 15px 25px;
+      font-size: 18px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    button:active {
+      background: #777;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Block Dodge</h1>
+  <canvas id="gameCanvas" width="300" height="400"></canvas>
+  
+  <!-- Mobile controls -->
+  <div class="controls">
+    <button onclick="moveLeft()">⬅️</button>
+    <button onclick="moveRight()">➡️</button>
+  </div>
+
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    // Player setup
+    let player = { x: 130, y: 350, width: 40, height: 40, speed: 20 };
+    let obstacles = [];
+    let score = 0;
+    let gameOver = false;
+
+    function drawPlayer() {
+      ctx.fillStyle = "cyan";
+      ctx.fillRect(player.x, player.y, player.width, player.height);
+    }
+
+    function drawObstacles() {
+      ctx.fillStyle = "red";
+      obstacles.forEach(obs => {
+        ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
+      });
+    }
+
+    function updateObstacles() {
+      obstacles.forEach(obs => obs.y += 4);
+      // Remove obstacles past screen
+      obstacles = obstacles.filter(obs => obs.y < canvas.height);
+      // Add new obstacles randomly
+      if (Math.random() < 0.03) {
+        let size = 40;
+        let x = Math.floor(Math.random() * (canvas.width - size));
+        obstacles.push({ x: x, y: -size, width: size, height: size });
+      }
+    }
+
+    function detectCollision() {
+      for (let obs of obstacles) {
+        if (
+          player.x < obs.x + obs.width &&
+          player.x + player.width > obs.x &&
+          player.y < obs.y + obs.height &&
+          player.y + player.height > obs.y
+        ) {
+          gameOver = true;
+        }
+      }
+    }
+
+    function drawScore() {
+      ctx.fillStyle = "white";
+      ctx.font = "16px Arial";
+      ctx.fillText("Score: " + score, 10, 20);
+    }
+
+    function gameLoop() {
+      if (gameOver) {
+        ctx.fillStyle = "rgba(0,0,0,0.7)";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "white";
+        ctx.font = "24px Arial";
+        ctx.fillText("Game Over!", 90, 200);
+        ctx.fillText("Score: " + score, 100, 240);
+        return;
+      }
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawPlayer();
+      drawObstacles();
+      drawScore();
+
+      updateObstacles();
+      detectCollision();
+
+      score++;
+      requestAnimationFrame(gameLoop);
+    }
+
+    // Touch controls
+    function moveLeft() {
+      if (player.x > 0) player.x -= player.speed;
+    }
+    function moveRight() {
+      if (player.x + player.width < canvas.width) player.x += player.speed;
+    }
+
+    // Keyboard support
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowLeft") moveLeft();
+      if (e.key === "ArrowRight") moveRight();
+    });
+
+    gameLoop();
+  </script>
+
+</body>
+</html>
